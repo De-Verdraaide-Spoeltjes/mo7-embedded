@@ -13,9 +13,18 @@
 int main()
 {
     init_platform();
+    print("Starting up\n\r");
 
-    print("Hello World\n\r");
-    print("Successfully ran Hello World application");
+    draaiknopData draaiknop;
+    filterData filters;
+    displayData display;
+
+    InitMenuController(&draaiknop, &filters, &display);
+
+    while (1) {
+        RunMenuController();
+    }
+
     cleanup_platform();
     return 0;
 }
