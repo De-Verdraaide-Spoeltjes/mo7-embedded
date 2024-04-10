@@ -65,13 +65,13 @@ void ButtonRight() {
         }
     } else if (menuState > 0 && menuState < 9) {
         // If a filter filters is active, increase the selected filter's value
-        if (FilterData->filterAmplitudes[menuState] < 32767 - FILTER_INCREMENT) {
-            FilterData->filterAmplitudes[menuState] += FILTER_INCREMENT;
+        if (FilterData->filterAmplitudes[menuState] < 100) {
+            FilterData->filterAmplitudes[menuState]++;
         }
     } else {
         // If the volume filters is active, increase the volume
-        if (FilterData->volume < 32767 - VOLUME_INCREMENT) {
-            FilterData->volume += VOLUME_INCREMENT;
+        if (FilterData->volume < 100) {
+            FilterData->volume++;
         }
     }
 }
@@ -84,13 +84,13 @@ void ButtonLeft() {
         }
     } else if (menuState > 0 && menuState < 9) {
         // If a filter filters is active, increase the selected filter's value
-        if (FilterData->filterAmplitudes[menuState] > FILTER_INCREMENT) {
-            FilterData->filterAmplitudes[menuState] -= FILTER_INCREMENT;
+        if (FilterData->filterAmplitudes[menuState] > -100) {
+            FilterData->filterAmplitudes[menuState]--;
         }
     } else {
         // If the volume filters is active, increase the volume
-        if (FilterData->volume < VOLUME_INCREMENT) {
-            FilterData->volume -= VOLUME_INCREMENT;
+        if (FilterData->volume > 0) {
+            FilterData->volume--;
         }
     }
 }
@@ -106,11 +106,11 @@ void UpdateDisplay() {
         sprintf(DisplayData->line3, "Click to select");
     } else if (menuState > 0 && menuState < 9) {
         sprintf(DisplayData->line1, "Filter %d", menuState);
-        sprintf(DisplayData->line2, "Amplitude: %d", FilterData->filterAmplitudes[menuState]);
+        sprintf(DisplayData->line2, "Gain: %d%%", FilterData->filterAmplitudes[menuState]);
         sprintf(DisplayData->line3, "Turn to adjust");
     } else {
         sprintf(DisplayData->line1, "Volume");
-        sprintf(DisplayData->line2, "Volume: %d", FilterData->volume);
+        sprintf(DisplayData->line2, "Volume: %d%%", FilterData->volume);
         sprintf(DisplayData->line3, "Turn to adjust");
     }
 }

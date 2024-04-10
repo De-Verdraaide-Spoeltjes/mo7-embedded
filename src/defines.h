@@ -10,7 +10,7 @@ typedef struct AudioData {
 } audioData;
 
 typedef struct FilterData {
-    s16 filterAmplitudes[6];
+    s8 filterAmplitudes[6];
     uint8_t volume;
 } filterData;
 
@@ -25,8 +25,5 @@ typedef struct DraaiknopData {
     bool right;
     bool left;
 } draaiknopData;
-
-#define FILTER_INCREMENT 1000
-#define VOLUME_INCREMENT 1000
 
 #endif
