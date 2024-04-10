@@ -1,8 +1,9 @@
 #ifndef SRC_MENUCONTROLLER_H
 #define SRC_MENUCONTROLLER_H
 
-#include "XStatus.h"
+#include "defines.h"
 
-XStatus InitMenuController();
+void InitMenuController(draaiknopData *draaiknop, filterData *filters, displayData *display);
+void RunMenuController();
 
 #endif
