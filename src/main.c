@@ -101,6 +101,12 @@ int main()
         if (timeNow - displayOldTime > US_TO_TIME(1000000 / 30)) {
             displayOldTime = timeNow;
             RunDisplay();
+
+            u8 buttonData = XGpio_DiscreteRead(&buttonGpio, BTN_CHANNEL);
+			draaiknop.left = buttonData & 0x01;
+			draaiknop.right = buttonData & 0x02;
+			draaiknop.pushed = buttonData & 0x04;
+
         }
     }
 

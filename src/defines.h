@@ -4,7 +4,7 @@
 #include <xil_types.h>
 #include <stdbool.h>
 
-#define DEBUG
+//#define DEBUG
 
 #define DISPLAY_WIDTH 128
 #define DISPLAY_HEIGHT 64

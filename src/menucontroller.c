@@ -13,7 +13,7 @@ draaiknopData *DraaiknopData;
 filterData *FilterData;
 
 uint8_t menuState = 0;
-uint8_t menuItemSelected = 0;
+uint8_t menuItemSelected = 1;
 
 displayData *DisplayData;
 
