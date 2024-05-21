@@ -13,11 +13,11 @@ draaiknopData *DraaiknopData;
 filterData *FilterData;
 
 uint8_t menuState = 0;
-uint8_t menuItemSelected = 0;
+uint8_t menuItemSelected = 1;
 
 displayData *DisplayData;
 
-void InitMenuController(draaiknopData *draaiknop, filterData *filters, displayData *display) {
+XStatus InitMenuController(draaiknopData *draaiknop, filterData *filters, displayData *display) {
     DraaiknopData = draaiknop;
     FilterData = filters;
     DisplayData = display;
@@ -28,6 +28,7 @@ void InitMenuController(draaiknopData *draaiknop, filterData *filters, displayDa
     FilterData->volume = 100;
 
     UpdateDisplay();
+    return XST_SUCCESS;
 }
 
 void RunMenuController() {
