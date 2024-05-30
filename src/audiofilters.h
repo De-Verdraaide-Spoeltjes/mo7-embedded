@@ -3,6 +3,8 @@
 
 #include "xstatus.h"
 
-XStatus InitAudioFilters();
+void interruptHandler(void *CallbackRef);
+void audioInterruptHandler(void *CallbackRef);
+void runFilters();
 
 #endif

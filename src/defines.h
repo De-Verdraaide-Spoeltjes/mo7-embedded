@@ -4,13 +4,15 @@
 #include <xil_types.h>
 #include <stdbool.h>
 
-//#define DEBUG
+#define DEBUG
 
 #define DISPLAY_WIDTH 128
 #define DISPLAY_HEIGHT 64
 #define I2C_SLAVE_DEVICE_ADDRESS 0x3C
 
 #define STATUS_BLINK 200 //ms
+
+#define INTERRUPT_PERIOD_US 20 //us
 
 #define TIME_TO_US_DIVIDER 325 //XPAR_CPU_CORTEXA9_0_CPU_CLK_FREQ_HZ / 2000000
 #define TIME_TO_US(i) (i / TIME_TO_US_DIVIDER)
