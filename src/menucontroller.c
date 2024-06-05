@@ -22,7 +22,7 @@ XStatus InitMenuController(draaiknopData *draaiknop, filterData *filters, displa
     FilterData = filters;
     DisplayData = display;
 
-    for (int i = 0; i < 8; i++) {
+    for (int i = 0; i < FILTER_COUNT; i++) {
         FilterData->filterAmplitudes[i] = 0;
     }
     FilterData->volume = 100;

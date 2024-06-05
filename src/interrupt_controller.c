@@ -22,6 +22,7 @@ XStatus initInterruptController(XScuGic *interruptController) {
         return XST_FAILURE;
     }
 
+	Xil_ExceptionInit();    // Initialize exception handler
     Xil_ExceptionRegisterHandler(XIL_EXCEPTION_ID_INT, (Xil_ExceptionHandler)XScuGic_InterruptHandler, interruptController);
     Xil_ExceptionEnable();
 

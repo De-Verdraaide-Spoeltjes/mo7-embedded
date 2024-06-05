@@ -2,12 +2,13 @@
 
 #include "xscugic.h"
 #include "xscutimer.h"
+#include "xtime_l.h"
 
 #include "audioController.h"
 #include "defines.h"
 
 #define UPPER_MIDS_LENGTH 	51
-const float upperMidsCoefficients[UPPER_MIDS_LENGTH] = {
+const double upperMidsCoefficients[UPPER_MIDS_LENGTH] = {
 	0.03171485715822,  0.01665051764101,  0.01619722522076,  0.01242054017441,
    0.006179524277911,-0.0007105809395844,-0.006053611002738,-0.007975518658629,
   -0.005732910812888,-0.0001291766825747, 0.006445281401913,  0.01064626004968,
@@ -24,7 +25,7 @@ const float upperMidsCoefficients[UPPER_MIDS_LENGTH] = {
 };
 
 #define PRESENCE_LENGTH 51
-const float presenceCoefficients[PRESENCE_LENGTH] = {
+const double presenceCoefficients[PRESENCE_LENGTH] = {
     0.00372019215702136443052472358772320149,
     -0.000492577268638062543311406660251350331,
     0.006765032445048032097578705190699110972,
@@ -79,7 +80,7 @@ const float presenceCoefficients[PRESENCE_LENGTH] = {
 };
 
 #define BRILLIANCE_LENGTH 51
-const float brillianceCoefficients[BRILLIANCE_LENGTH] = {
+const double brillianceCoefficients[BRILLIANCE_LENGTH] = {
     0.01360983433774,-0.001390312836548, -0.02141435929172, -0.01730289178319,
     0.01065168665208,  0.02070789487506, 0.002958579558854,-0.005687400333269,
   0.0007499545829186, -0.01225075406956, -0.03144361549241,-0.002752778261863,
@@ -96,7 +97,7 @@ const float brillianceCoefficients[BRILLIANCE_LENGTH] = {
 };
 
 #define OPEN_AIR_LENGTH 51
-const float openAirCoefficients[OPEN_AIR_LENGTH] = {
+const double openAirCoefficients[OPEN_AIR_LENGTH] = {
     -0.030051293213254465924721969827260181773,
     -0.000000589137342034173266074438893302734,
     0.009382847348008706636623976748978748219,
@@ -155,13 +156,57 @@ const float openAirCoefficients[OPEN_AIR_LENGTH] = {
 int audioBufferIndex = 0;
 audioData audioBuffer[AUDIO_BUFFER_SIZE];
 
+#define FILTER_LENGTH 51
+double coefficients[FILTER_LENGTH] = {0.0};
+
 #define FILTER_COUNT 4
 
+void calculateCoefficients();
+double filterCoefficient(const double *coefficients, int filterLength, int index);
 void runFilters();
-void firFilter(audioData *result, float *coefficients, int filterLength);
+void sumAudio(audioData *result, audioData *audioIn, int length);
+void firFilter(audioData *result, const float *coefficients, int filterLength);
 void volumeBoost(audioData *audio, float volumeFactor);
 void addToAudioBuffer(audioData *audio);
 void getFromAudioBuffer(audioData *audio, int decr);
+
+
+#ifdef PRINT_DURATION
+static const volatile void Duration() {
+	static XTime last_sample_time = 0;
+	static u32 count_2 = SAMPLE_RATE / 2;
+	XTime sample_time = 0;
+	XTime_GetTime(&sample_time);
+
+    static uint8_t recalc = 0;
+
+	u32 time_diff = sample_time - last_sample_time;
+	last_sample_time = sample_time;
+
+	if (count_2 > SAMPLE_RATE) {
+		count_2 = 0;
+		xil_printf("Time between samples: %d\t | On time: ", time_diff);
+        if (TIME_TO_US(time_diff) <= INTERRUPT_PERIOD_US) {
+            xil_printf("Yes\r\n");
+        } else {
+            xil_printf("No\r\n");
+        }
+        recalc++;
+	}
+	count_2++;
+
+    if (recalc >= 10) {
+        recalc = 0;
+        XTime start, stop;
+        XTime_GetTime(&start);
+        calculateCoefficients();
+        XTime_GetTime(&stop);
+        u32 duration = stop - start;
+        xil_printf("Duration of coefficient calculation: %d\r\n", duration);
+    }
+
+}
+#endif
 
 // Handle the interrupt logic
 void audioInterruptHandler(void* callbackRef) {
@@ -171,9 +216,50 @@ void audioInterruptHandler(void* callbackRef) {
         XScuTimer_ClearInterruptStatus(timer);
         XScuTimer_LoadTimer(timer, INTERRUPT_PERIOD_US * TIME_TO_US_DIVIDER);
         XScuTimer_Start(timer);
+        
+        #ifdef PRINT_DURATION
+            XTime start, stop;
+            XTime_GetTime(&start);		
+        #endif
 
         runFilters();
+            
+        #ifdef PRINT_DURATION
+            XTime_GetTime(&stop);
+
+            // Print duration of bandpass filter
+            u32 duration = stop - start;
+            static u32 count = 0;
+            if (count > SAMPLE_RATE) {
+                count = 0;
+                // print duration of bandpass filter
+                xil_printf("Duration of bandpass filter: %d\r\n", duration);
+            }
+            count++;
+        #endif
+        
+        // print the time between samples
+        #ifdef PRINT_DURATION
+            Duration();
+        #endif
     }
+}
+
+void calculateCoefficients() {
+    // Calculate the coefficients for the filters
+    for (int i = 0; i < FILTER_LENGTH; i++) {
+        coefficients[i] = filterCoefficient(upperMidsCoefficients, UPPER_MIDS_LENGTH, i) +
+                          filterCoefficient(presenceCoefficients, PRESENCE_LENGTH, i) +
+                          filterCoefficient(brillianceCoefficients, BRILLIANCE_LENGTH, i) +
+                          filterCoefficient(openAirCoefficients, OPEN_AIR_LENGTH, i);
+    }
+}
+
+double filterCoefficient(const double *coefficients, int filterLength, int index) {
+    if (index < 0 || index >= filterLength) {
+        return 0;
+    }
+    return coefficients[index];
 }
 
 // Main function to run the filters
@@ -185,16 +271,18 @@ void runFilters() {
     // Update the audio buffer
     addToAudioBuffer(&audio);
 
-    // Apply the filters
-    audioData filterOutputs[FILTER_COUNT];
-    firFilter(&filterOutputs[0], upperMidsCoefficients, UPPER_MIDS_LENGTH);
-    firFilter(&filterOutputs[1], presenceCoefficients, PRESENCE_LENGTH);
-    firFilter(&filterOutputs[2], brillianceCoefficients, BRILLIANCE_LENGTH);
-    firFilter(&filterOutputs[3], openAirCoefficients, OPEN_AIR_LENGTH);
-
-    // Combine the results
+    // Init apply the filters
     audioData result;
-    sumAudio(&result, filterOutputs, FILTER_COUNT);
+    result.left = 0;
+    result.right = 0;
+
+    // Apply the FIR filter
+    audioData temp;
+    for (int i = 0; i < 51; i++) {
+        getFromAudioBuffer(&temp, i);
+        result.left += temp.left * coefficients[i];
+        result.right += temp.right * coefficients[i];
+    }
 
     // Set volume
     // volumeBoost(&result, 20.0);
@@ -203,37 +291,10 @@ void runFilters() {
     writeAudio(&result);
 }
 
-// Apply a FIR filter
-void firFilter(audioData *result, float *coefficients, int filterLength) {
-    audioData audio;
-    getFromAudioBuffer(&audio, 0);
-
-    result->left = 0;
-    result->right = 0;
-
-    for (int i = 0; i < filterLength; i++) {
-        audioData temp;
-        getFromAudioBuffer(&temp, i);
-        result->left += temp.left * coefficients[i];
-        result->right += temp.right * coefficients[i];
-    }
-}
-
 // Boost the volume of the audio data
 void volumeBoost(audioData *audio, float volumeFactor) {
     audio->left *= volumeFactor;
     audio->right *= volumeFactor;
-}
-
-// Sum multiple audio data
-void sumAudio(audioData *result, audioData *audioIn, int length) {
-    result->left = 0;
-    result->right = 0;
-
-    for (int i = 0; i < length; i++) {
-        result->left += audioIn[i].left;
-        result->right += audioIn[i].right;
-    }
 }
 
 // Add audio data to the buffer
