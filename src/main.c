@@ -12,7 +12,6 @@
 #include "volumecontroller.h"
 #include "interrupt_controller.h"
 
-#include "sleep.h"
 #include "xgpio.h"
 #include "xscugic.h"
 #include "xtime_l.h"
@@ -31,33 +30,46 @@ draaiknopData draaiknop;
 filterData filters;
 displayData display;
 
+void hold(u32 time);
 
+XStatus initButton() {
+	XStatus status;
+    // Initialize the GPIO instance
+    status = XGpio_Initialize(&buttonGpio, BTN_DEVICE_ID);
+    if (status != XST_SUCCESS) {
+        printf("Error initializing button GPIO\r\n");
+        return XST_FAILURE;
+    }
 
-// XStatus initButton() {
-// 	XStatus status;
-//     // Initialize the GPIO instance
-//     status = XGpio_Initialize(&buttonGpio, BTN_DEVICE_ID);
-//     if (status != XST_SUCCESS) {
-//         printf("Error initializing button GPIO\r\n");
-//         return XST_FAILURE;
-//     }
+    // Set the GPIO channel direction to input
+    XGpio_SetDataDirection(&buttonGpio, BTN_CHANNEL, 0xFFFFFFFF);
 
-//     // Set the GPIO channel direction to input
-//     XGpio_SetDataDirection(&buttonGpio, BTN_CHANNEL, 0xFFFFFFFF);
-
-//     return XST_SUCCESS;
-// }
+    return XST_SUCCESS;
+}
 
 
 void Initialize() {
 	XGpio_DiscreteWrite(&leds, 1, 0x3);
 
 	XStatus status, init_state = XST_SUCCESS;
-	// status = initButton();
-	// if (status != XST_SUCCESS) {
-	// 	print("Error initializing buttons\n\r");
-	// }
-	// init_state |= status;
+	status = initButton();
+	if (status != XST_SUCCESS) {
+		print("Error initializing buttons\n\r");
+	}
+	init_state |= status;
+
+	status = InitMenuController(&draaiknop, &filters, &display);
+	if (status != XST_SUCCESS) {
+		print("Error initializing menu controller\n\r");
+	}
+	init_state |= status;
+
+	status = initDisplay(&display);
+	if (status != XST_SUCCESS) {
+		print("Error initializing display\n\r");
+	}
+	init_state |= status;
+
 
 	status = initInterruptController(&interruptController);
 	if (status != XST_SUCCESS) {
@@ -79,24 +91,12 @@ void Initialize() {
 	}
 	init_state |= status;
 
-// 	status = InitMenuController(&draaiknop, &filters, &display);
-// 	if (status != XST_SUCCESS) {
-// 		print("Error initializing menu controller\n\r");
-// 	}
-// 	init_state |= status;
-
-// 	// status = initDisplay(&display);
-// 	// if (status != XST_SUCCESS) {
-// 	// 	print("Error initializing display\n\r");
-// 	// }
-// 	// init_state |= status;
-
 	if (init_state == XST_SUCCESS) {
 		XGpio_DiscreteWrite(&leds, 1, 0x2);
 		print("Embedded application initialized\n\r");
 	} else {
 		XGpio_DiscreteWrite(&leds, 1, 0x1);
-		usleep(500000);
+		hold(500000); // 0.5 seconds
 		Initialize();
 	}
 }
@@ -110,29 +110,28 @@ int main()
 	XGpio_Initialize(&leds, STATUS_LED_DEVICE_ID);
 	XGpio_SetDataDirection(&leds, 1, 0x0);
     
-    // static XTime displayOldTime = 0;
+    static XTime displayOldTime = 0;
 
     Initialize();
 
-	usleep(500000);
+	hold(500000);	// 0.5 seconds
 
     while (1) {
        statusLED();
-    //    RunMenuController();
+       RunMenuController();
 
-       
-    //     XTime timeNow;
-	// 	XTime_GetTime(&timeNow);
-    //     if (timeNow - displayOldTime > US_TO_TIME(1000000 / 30)) {
-    //         displayOldTime = timeNow;
-    //         // RunDisplay();
+        XTime timeNow;
+		XTime_GetTime(&timeNow);
+        if (timeNow - displayOldTime > US_TO_TIME(1000000 / 30)) {
+            displayOldTime = timeNow;
+            // RunDisplay();
 
-    //         u8 buttonData = XGpio_DiscreteRead(&buttonGpio, BTN_CHANNEL);
-	// 		draaiknop.left = buttonData & 0x01;
-	// 		draaiknop.right = buttonData & 0x02;
-	// 		draaiknop.pushed = buttonData & 0x04;
+            u8 buttonData = XGpio_DiscreteRead(&buttonGpio, BTN_CHANNEL);
+			draaiknop.left = buttonData & 0x01;
+			draaiknop.right = buttonData & 0x02;
+			draaiknop.pushed = buttonData & 0x04;
 
-    //     }
+        }
     }
 
     cleanup_platform();
@@ -150,4 +149,15 @@ void statusLED() {
         state = !state;
         tOld = tNow;
     }
+}
+
+
+// Hold for a certain amount of time in microseconds
+void hold(u32 time) {
+	XTime tNow;
+	XTime tOld;
+	XTime_GetTime(&tOld);
+	while (tOld + US_TO_TIME(time) * 1000 > tNow) {
+		XTime_GetTime(&tNow);
+	}
 }

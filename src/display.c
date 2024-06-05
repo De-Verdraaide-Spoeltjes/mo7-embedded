@@ -176,7 +176,8 @@ XStatus initDisplay(displayData *display) {
         return XST_FAILURE;
     }
 
-    XIicPs_SetSClk(&iic, IIC_CLOCK_SPEED);
+    // XIicPs_SetSClk(&iic, IIC_CLOCK_SPEED);
+    XIicPs_SetSClk(&iic, IIC_CLK);
 
     GFX_init(&display_drawPixel, &display_drawBlock, DISPLAY_WIDTH, DISPLAY_HEIGHT);
 
@@ -331,5 +332,5 @@ static void writeMulti(uint8_t *src, uint16_t count) {
         return;
     }
 
-    usleep(IIC_DELAY);
+   usleep(IIC_DELAY);
 }
