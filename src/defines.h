@@ -25,19 +25,24 @@
 
 #define FILTER_COUNT 4
 
-enum displayAlignment 
-{
+enum displayAlignment {
     Text_start_left, 
     Text_start_center, 
     Text_start_right
 };
 
-enum displayFontSelect 
-{
+enum displayFontSelect {
     Font_small, 
     Font_medium, 
 	Font_medium_large,
     Font_large
+};
+
+enum filterSelect {
+    Filter_upper_mids, 
+    Filter_presence,
+    Filter_brilliance,
+    Filter_open_air
 };
 
 typedef struct AudioData {

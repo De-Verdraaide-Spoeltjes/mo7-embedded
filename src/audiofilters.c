@@ -5,7 +5,6 @@
 #include "xtime_l.h"
 
 #include "audioController.h"
-#include "defines.h"
 
 #define UPPER_MIDS_LENGTH 	51
 const double upperMidsCoefficients[UPPER_MIDS_LENGTH] = {
@@ -161,12 +160,12 @@ double coefficients[FILTER_LENGTH] = {0.0};
 
 #define FILTER_COUNT 4
 
-void calculateCoefficients();
+filterData *filter_data;
+
 double filterCoefficient(const double *coefficients, int filterLength, int index);
 void runFilters();
 void sumAudio(audioData *result, audioData *audioIn, int length);
 void firFilter(audioData *result, const float *coefficients, int filterLength);
-void volumeBoost(audioData *audio, float volumeFactor);
 void addToAudioBuffer(audioData *audio);
 void getFromAudioBuffer(audioData *audio, int decr);
 
@@ -208,6 +207,14 @@ static const volatile void Duration() {
 }
 #endif
 
+// Initialize the audio filters
+XStatus initAudioFilters(filterData *filters) {
+    filter_data = filters;
+
+    calculateCoefficients();
+    return XST_SUCCESS;
+}
+
 // Handle the interrupt logic
 void audioInterruptHandler(void* callbackRef) {
     XScuTimer *timer = (XScuTimer *)callbackRef;
@@ -248,10 +255,12 @@ void audioInterruptHandler(void* callbackRef) {
 void calculateCoefficients() {
     // Calculate the coefficients for the filters
     for (int i = 0; i < FILTER_LENGTH; i++) {
-        coefficients[i] = filterCoefficient(upperMidsCoefficients, UPPER_MIDS_LENGTH, i) +
-                          filterCoefficient(presenceCoefficients, PRESENCE_LENGTH, i) +
-                          filterCoefficient(brillianceCoefficients, BRILLIANCE_LENGTH, i) +
-                          filterCoefficient(openAirCoefficients, OPEN_AIR_LENGTH, i);
+        coefficients[i] = (
+            (filterCoefficient(upperMidsCoefficients, UPPER_MIDS_LENGTH, i) * ((100.0 + filter_data->filterAmplitudes[Filter_upper_mids]) / 100)) +
+            (filterCoefficient(presenceCoefficients, PRESENCE_LENGTH, i) * ((100.0 + filter_data->filterAmplitudes[Filter_presence]) / 100)) +
+            (filterCoefficient(brillianceCoefficients, BRILLIANCE_LENGTH, i) * ((100.0 + filter_data->filterAmplitudes[Filter_brilliance]) / 100)) +
+            (filterCoefficient(openAirCoefficients, OPEN_AIR_LENGTH, i) * ((100.0 + filter_data->filterAmplitudes[Filter_open_air]) / 100))
+        ) * filter_data->volume / 100.0;
     }
 }
 
@@ -289,12 +298,6 @@ void runFilters() {
 
     // Write the audio result
     writeAudio(&result);
-}
-
-// Boost the volume of the audio data
-void volumeBoost(audioData *audio, float volumeFactor) {
-    audio->left *= volumeFactor;
-    audio->right *= volumeFactor;
 }
 
 // Add audio data to the buffer

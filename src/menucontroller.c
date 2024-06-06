@@ -1,5 +1,6 @@
 #include "menucontroller.h"
 #include "defines.h"
+#include "audiofilters.h"
 
 #include <stdio.h>
 
@@ -118,4 +119,7 @@ void UpdateDisplay() {
         sprintf(DisplayData->line2, "Volume: %d%%", FilterData->volume);
         sprintf(DisplayData->line3, "Turn to adjust");
     }
+
+    // Calculate the new filter coefficients beqause the filter settings have changed
+    calculateCoefficients();
 }

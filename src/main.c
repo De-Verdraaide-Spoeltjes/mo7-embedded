@@ -84,7 +84,10 @@ void Initialize() {
 	}
 	init_state |= status;
 
-	calculateCoefficients();
+	status = initAudioFilters(&filters);
+	if (status != XST_SUCCESS) {
+		print("Error initializing audio filters\n\r");
+	}
 
 	status = setupTimerInterrupt(&interruptController, INTERRUPT_PERIOD_US, audioInterruptHandler);
 	if (status != XST_SUCCESS) {
