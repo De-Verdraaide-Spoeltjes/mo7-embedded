@@ -6,5 +6,6 @@
 
 XStatus InitMenuController(draaiknopData *draaiknop, filterData *filters, displayData *display);
 void RunMenuController();
+void UpdateDisplay();
 
 #endif

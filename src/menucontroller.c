@@ -26,8 +26,9 @@ XStatus InitMenuController(draaiknopData *draaiknop, filterData *filters, displa
         FilterData->filterAmplitudes[i] = 0;
     }
     FilterData->volume = 100;
-
+    
     UpdateDisplay();
+
     return XST_SUCCESS;
 }
 
@@ -37,15 +38,18 @@ void RunMenuController() {
     if (DraaiknopData->pushed) {
         ButtonPressed();
         DraaiknopData->pushed = false;
-    } else if (DraaiknopData->right) {
+        UpdateDisplay();
+    } 
+    else if (DraaiknopData->right) {
         ButtonRight();
         DraaiknopData->right = false;
-    } else if (DraaiknopData->left) {
+        UpdateDisplay();
+    } 
+    else if (DraaiknopData->left) {
         ButtonLeft();
         DraaiknopData->left = false;
+        UpdateDisplay();
     }
-
-    UpdateDisplay();
 }
 
 void ButtonPressed() {

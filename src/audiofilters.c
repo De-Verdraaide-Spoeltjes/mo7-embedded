@@ -214,8 +214,8 @@ void audioInterruptHandler(void* callbackRef) {
 
     if (XScuTimer_IsExpired(timer)) {
         XScuTimer_ClearInterruptStatus(timer);
-        XScuTimer_LoadTimer(timer, INTERRUPT_PERIOD_US * TIME_TO_US_DIVIDER);
-        XScuTimer_Start(timer);
+//        XScuTimer_LoadTimer(timer, INTERRUPT_PERIOD_US * TIME_TO_US_DIVIDER);
+//        XScuTimer_Start(timer);
         
         #ifdef PRINT_DURATION
             XTime start, stop;

@@ -116,7 +116,6 @@ int main()
     Initialize();
 
     usleep(500000);	// 0.5 seconds
-	// RunDisplay();
 
     while (1) {
        statusLED();
@@ -126,13 +125,12 @@ int main()
 		XTime_GetTime(&timeNow);
         if (timeNow - displayOldTime > US_TO_TIME(1000000 / 30)) {
             displayOldTime = timeNow;
-            // RunDisplay();
+            RunDisplay();
 
             u8 buttonData = XGpio_DiscreteRead(&buttonGpio, BTN_CHANNEL);
 			draaiknop.left = buttonData & 0x01;
 			draaiknop.right = buttonData & 0x02;
 			draaiknop.pushed = buttonData & 0x04;
-
         }
     }
 

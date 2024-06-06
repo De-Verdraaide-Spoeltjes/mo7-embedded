@@ -92,9 +92,11 @@ XStatus setupTimerInterrupt(XScuGic *interruptController, uint32_t time, Xil_Exc
         return XST_FAILURE;
     }
 
+
     XScuGic_Enable(interruptController, XPAR_SCUTIMER_INTR);
     XScuTimer_EnableInterrupt(&timer);
     XScuTimer_LoadTimer(&timer, time * TIME_TO_US_DIVIDER);
+    XScuTimer_EnableAutoReload(&timer);
     XScuTimer_Start(&timer);
 
     return XST_SUCCESS;
