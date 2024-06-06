@@ -12,6 +12,7 @@
 #include "volumecontroller.h"
 #include "interrupt_controller.h"
 
+#include "sleep.h"
 #include "xgpio.h"
 #include "xscugic.h"
 #include "xtime_l.h"
@@ -96,7 +97,7 @@ void Initialize() {
 		print("Embedded application initialized\n\r");
 	} else {
 		XGpio_DiscreteWrite(&leds, 1, 0x1);
-		hold(500000); // 0.5 seconds
+		usleep(5000000); // 5 seconds
 		Initialize();
 	}
 }
@@ -114,7 +115,8 @@ int main()
 
     Initialize();
 
-	hold(500000);	// 0.5 seconds
+    usleep(500000);	// 0.5 seconds
+	// RunDisplay();
 
     while (1) {
        statusLED();
@@ -149,15 +151,4 @@ void statusLED() {
         state = !state;
         tOld = tNow;
     }
-}
-
-
-// Hold for a certain amount of time in microseconds
-void hold(u32 time) {
-	XTime tNow;
-	XTime tOld;
-	XTime_GetTime(&tOld);
-	while (tOld + US_TO_TIME(time) * 1000 > tNow) {
-		XTime_GetTime(&tNow);
-	}
 }
