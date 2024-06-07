@@ -40,6 +40,7 @@ enum displayFontSelect {
 };
 
 enum filterSelect {
+    Filter_lowpass,
     Filter_upper_mids, 
     Filter_presence,
     Filter_brilliance,

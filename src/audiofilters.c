@@ -6,6 +6,23 @@
 
 #include "audioController.h"
 
+#define LOWPASS_LENGTH 51
+const double lowpassCoefficients[LOWPASS_LENGTH] = {
+   -0.01760664405175,-0.007870195747785,-0.009088520015835,-0.009984996428929,
+   -0.01042949818627, -0.01028100820956,-0.009418731126165,-0.007725769414032,
+  -0.005119706333226,-0.001536073182933, 0.003041816738266, 0.008602092700111,
+    0.01507954741806,  0.02238441950434,  0.03036082931307,   0.0388323741776,
+    0.04759005125652,  0.05636675298203,  0.06494841610009,  0.07304506774057,
+    0.08041204939289,  0.08680621475111,  0.09203086358547,  0.09588641118614,
+    0.09825432360497,  0.09904719092837,  0.09825432360497,  0.09588641118614,
+    0.09203086358547,  0.08680621475111,  0.08041204939289,  0.07304506774057,
+    0.06494841610009,  0.05636675298203,  0.04759005125652,   0.0388323741776,
+    0.03036082931307,  0.02238441950434,  0.01507954741806, 0.008602092700111,
+   0.003041816738266,-0.001536073182933,-0.005119706333226,-0.007725769414032,
+  -0.009418731126165, -0.01028100820956, -0.01042949818627,-0.009984996428929,
+  -0.009088520015835,-0.007870195747785, -0.01760664405175
+};
+
 #define UPPER_MIDS_LENGTH 	51
 const double upperMidsCoefficients[UPPER_MIDS_LENGTH] = {
 	0.03171485715822,  0.01665051764101,  0.01619722522076,  0.01242054017441,
@@ -151,7 +168,7 @@ const double openAirCoefficients[OPEN_AIR_LENGTH] = {
 };
 
 
-#define AUDIO_BUFFER_SIZE 51
+#define AUDIO_BUFFER_SIZE BIGGEST(LOWPASS_LENGTH, BIGGEST(UPPER_MIDS_LENGTH, BIGGEST(PRESENCE_LENGTH, BIGGEST(BRILLIANCE_LENGTH, OPEN_AIR_LENGTH))))
 int audioBufferIndex = 0;
 audioData audioBuffer[AUDIO_BUFFER_SIZE];
 
@@ -260,6 +277,7 @@ void calculateCoefficients() {
     // Calculate the coefficients for the filters
     for (int i = 0; i < FILTER_LENGTH; i++) {
         coefficients[i] = (
+            (filterCoefficient(lowpassCoefficients, LOWPASS_LENGTH, i) * ((100.0 + filter_data->filterAmplitudes[Filter_lowpass]) / 100)) +
             (filterCoefficient(upperMidsCoefficients, UPPER_MIDS_LENGTH, i) * ((100.0 + filter_data->filterAmplitudes[Filter_upper_mids]) / 100)) +
             (filterCoefficient(presenceCoefficients, PRESENCE_LENGTH, i) * ((100.0 + filter_data->filterAmplitudes[Filter_presence]) / 100)) +
             (filterCoefficient(brillianceCoefficients, BRILLIANCE_LENGTH, i) * ((100.0 + filter_data->filterAmplitudes[Filter_brilliance]) / 100)) +
