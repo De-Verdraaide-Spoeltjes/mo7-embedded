@@ -23,6 +23,7 @@ void statusLED();
 #define BTN_DEVICE_ID           XPAR_BTNS_SWITCHES_INPUTS_DEVICE_ID
 #define BTN_CHANNEL             1
 #define STATUS_LED_DEVICE_ID    XPAR_LEDS_OUTPUTS_DEVICE_ID
+#define STATUS_LED_CHANNEL      2
 XGpio buttonGpio;
 XGpio leds;
 XScuGic interruptController;
@@ -50,7 +51,7 @@ XStatus initButton() {
 
 
 void Initialize() {
-	XGpio_DiscreteWrite(&leds, 1, 0x3);
+	XGpio_DiscreteWrite(&leds, STATUS_LED_CHANNEL, LED_ORANGE);
 
 	XStatus status, init_state = XST_SUCCESS;
 	status = initButton();
@@ -96,10 +97,10 @@ void Initialize() {
 	init_state |= status;
 
 	if (init_state == XST_SUCCESS) {
-		XGpio_DiscreteWrite(&leds, 1, 0x2);
+		XGpio_DiscreteWrite(&leds, STATUS_LED_CHANNEL, LED_GREEN);
 		print("Embedded application initialized\n\r");
 	} else {
-		XGpio_DiscreteWrite(&leds, 1, 0x1);
+		XGpio_DiscreteWrite(&leds, STATUS_LED_CHANNEL, LED_RED);
 		usleep(5000000); // 5 seconds
 		Initialize();
 	}
@@ -108,11 +109,11 @@ void Initialize() {
 
 int main()
 {
-    init_platform();
+	init_platform();
 	print("Starting embedded application\n\r");
 
 	XGpio_Initialize(&leds, STATUS_LED_DEVICE_ID);
-	XGpio_SetDataDirection(&leds, 1, 0x0);
+	XGpio_SetDataDirection(&leds, STATUS_LED_CHANNEL, 0x0);
     
     static XTime displayOldTime = 0;
 
@@ -148,7 +149,7 @@ void statusLED() {
     XTime_GetTime(&tNow);
     if (tOld + US_TO_TIME(STATUS_BLINK) * 1000 < tNow) {
         // Toggle status LED
-        XGpio_DiscreteWrite(&leds, 1, state << 2);
+        XGpio_DiscreteWrite(&leds, STATUS_LED_CHANNEL, state ? LED_BLUE : 0x0);
         state = !state;
         tOld = tNow;
     }

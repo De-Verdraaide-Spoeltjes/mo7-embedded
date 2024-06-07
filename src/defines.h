@@ -4,8 +4,8 @@
 #include <xil_types.h>
 #include <stdbool.h>
 
-#define DEBUG
-#define PRINT_DURATION
+// #define DEBUG
+// #define PRINT_DURATION
 // #define AUTO_RECALCULATE_COEFFICIENTS
 
 #define DISPLAY_WIDTH 128
@@ -46,6 +46,17 @@ enum filterSelect {
     Filter_brilliance,
     Filter_open_air,
     FILTER_COUNT
+};
+
+enum ledColor {
+    LED_OFF = 0,
+    LED_RED = 0b100,
+    LED_GREEN = 0b010,
+    LED_BLUE = 0b001,
+    LED_ORANGE = LED_RED | LED_GREEN,
+    LED_PURPLE = LED_RED | LED_BLUE,
+    LED_CYAN = LED_GREEN | LED_BLUE,
+    LED_WHITE = LED_RED | LED_GREEN | LED_BLUE
 };
 
 typedef struct AudioData {
