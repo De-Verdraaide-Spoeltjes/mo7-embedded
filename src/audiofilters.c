@@ -155,10 +155,8 @@ const double openAirCoefficients[OPEN_AIR_LENGTH] = {
 int audioBufferIndex = 0;
 audioData audioBuffer[AUDIO_BUFFER_SIZE];
 
-#define FILTER_LENGTH 51
+#define FILTER_LENGTH   AUDIO_BUFFER_SIZE
 double coefficients[FILTER_LENGTH] = {0.0};
-
-#define FILTER_COUNT 4
 
 filterData *filter_data;
 
@@ -177,7 +175,9 @@ static const volatile void Duration() {
 	XTime sample_time = 0;
 	XTime_GetTime(&sample_time);
 
-    static uint8_t recalc = 0;
+    #ifdef AUTO_RECALCULATE_COEFFICIENTS
+        static uint8_t recalc = 0;
+    #endif
 
 	u32 time_diff = sample_time - last_sample_time;
 	last_sample_time = sample_time;
@@ -190,20 +190,24 @@ static const volatile void Duration() {
         } else {
             xil_printf("No\r\n");
         }
-        recalc++;
+
+        #ifdef AUTO_RECALCULATE_COEFFICIENTS
+            recalc++;
+        #endif
 	}
 	count_2++;
 
-    if (recalc >= 10) {
-        recalc = 0;
-        XTime start, stop;
-        XTime_GetTime(&start);
-        calculateCoefficients();
-        XTime_GetTime(&stop);
-        u32 duration = stop - start;
-        xil_printf("Duration of coefficient calculation: %d\r\n", duration);
-    }
-
+    #ifdef AUTO_RECALCULATE_COEFFICIENTS
+        if (recalc >= 10) {
+            recalc = 0;
+            XTime start, stop;
+            XTime_GetTime(&start);
+            calculateCoefficients();
+            XTime_GetTime(&stop);
+            u32 duration = stop - start;
+            xil_printf("Duration of coefficient calculation: %d\r\n", duration);
+        }
+    #endif
 }
 #endif
 

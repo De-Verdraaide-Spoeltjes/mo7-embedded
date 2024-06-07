@@ -6,6 +6,7 @@
 
 #define DEBUG
 #define PRINT_DURATION
+// #define AUTO_RECALCULATE_COEFFICIENTS
 
 #define DISPLAY_WIDTH 128
 #define DISPLAY_HEIGHT 64
@@ -23,7 +24,7 @@
 #define TIME_TO_US(i) (i / TIME_TO_US_DIVIDER)
 #define US_TO_TIME(i) (i * TIME_TO_US_DIVIDER)
 
-#define FILTER_COUNT 4
+#define BIGGEST(a, b) ((a) > (b) ? (a) : (b))
 
 enum displayAlignment {
     Text_start_left, 
@@ -42,7 +43,8 @@ enum filterSelect {
     Filter_upper_mids, 
     Filter_presence,
     Filter_brilliance,
-    Filter_open_air
+    Filter_open_air,
+    FILTER_COUNT
 };
 
 typedef struct AudioData {

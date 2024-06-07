@@ -13,6 +13,14 @@ draaiknopData *DraaiknopData;
 
 filterData *FilterData;
 
+const char filterNames[FILTER_COUNT][MAX_TEXT_LENGTH] = {
+    [Filter_lowpass] = "Lowpass",
+    [Filter_upper_mids] = "Upper Mids",
+    [Filter_presence] = "Presence",
+    [Filter_brilliance] = "Brilliance",
+    [Filter_open_air] = "Open Air"
+};
+
 uint8_t menuState = 0;
 uint8_t menuItemSelected = 1;
 
@@ -66,13 +74,13 @@ void ButtonPressed() {
 void ButtonRight() {
     if (menuState == 0) {
         // If the main filters is active, scroll to the next filters item
-        if (menuItemSelected < 9) {
+        if (menuItemSelected < FILTER_COUNT + 1) {
             menuItemSelected++;
         }
-    } else if (menuState > 0 && menuState < 9) {
+    } else if (menuState > 0 && menuState < FILTER_COUNT + 1) {
         // If a filter filters is active, increase the selected filter's value
-        if (FilterData->filterAmplitudes[menuState] < 100) {
-            FilterData->filterAmplitudes[menuState]++;
+        if (FilterData->filterAmplitudes[menuState - 1] < 100) {
+            FilterData->filterAmplitudes[menuState - 1]++;
         }
     } else {
         // If the volume filters is active, increase the volume
@@ -88,10 +96,10 @@ void ButtonLeft() {
         if (menuItemSelected > 1) {
             menuItemSelected--;
         }
-    } else if (menuState > 0 && menuState < 9) {
+    } else if (menuState > 0 && menuState < FILTER_COUNT + 1) {
         // If a filter filters is active, increase the selected filter's value
-        if (FilterData->filterAmplitudes[menuState] > -100) {
-            FilterData->filterAmplitudes[menuState]--;
+        if (FilterData->filterAmplitudes[menuState - 1] > -100) {
+            FilterData->filterAmplitudes[menuState - 1]--;
         }
     } else {
         // If the volume filters is active, increase the volume
@@ -104,18 +112,18 @@ void ButtonLeft() {
 void UpdateDisplay() {
     if (menuState == 0) {
         sprintf(DisplayData->line1, "Main filters");
-        if (menuItemSelected == 9) {
+        if (menuItemSelected == FILTER_COUNT + 1) {
             sprintf(DisplayData->line2, "Volume");
         } else {
-            sprintf(DisplayData->line2, "Filter %d", menuItemSelected);
+            sprintf(DisplayData->line2, "%s", filterNames[menuItemSelected - 1]);
         }
         sprintf(DisplayData->line3, "Click to select");
-    } else if (menuState > 0 && menuState < 9) {
-        sprintf(DisplayData->line1, "Filter %d", menuState);
-        sprintf(DisplayData->line2, "Gain: %d%%", FilterData->filterAmplitudes[menuState]);
+    } else if (menuState > 0 && menuState < FILTER_COUNT + 1) {
+        sprintf(DisplayData->line1, "%s", filterNames[menuState - 1]);
+        sprintf(DisplayData->line2, "Gain: %d%%", FilterData->filterAmplitudes[menuState - 1]);
         sprintf(DisplayData->line3, "Turn to adjust");
     } else {
-        sprintf(DisplayData->line1, "Volume");
+        sprintf(DisplayData->line1, "Main volume");
         sprintf(DisplayData->line2, "Volume: %d%%", FilterData->volume);
         sprintf(DisplayData->line3, "Turn to adjust");
     }
