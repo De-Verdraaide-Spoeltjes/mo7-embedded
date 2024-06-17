@@ -4,8 +4,8 @@
 #include "defines.h"
 #include "XStatus.h"
 
-XStatus InitMenuController(draaiknopData *draaiknop, filterData *filters, displayData *display);
-void RunMenuController();
+XStatus InitMenuController(filterData *filters, displayData *display);
+void RunMenuController(draaiknopData *draaiknop);
 void UpdateDisplay();
 
 #endif

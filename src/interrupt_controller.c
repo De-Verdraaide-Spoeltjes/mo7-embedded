@@ -33,7 +33,7 @@ XStatus initInterruptController(XScuGic *interruptController) {
     return XST_SUCCESS;
 }
 
-XStatus setupGpioWithInterrupt(XScuGic *interruptController, XGpio *gpio, u16 gpioDeviceId, u32 interruptId, Xil_InterruptHandler handler) {
+XStatus setupGpioWithInterrupt(XScuGic *interruptController, XGpio *gpio, u16 gpioDeviceId, unsigned gpioChannel, u32 interruptId, Xil_InterruptHandler handler) {
     XStatus status;
 
     status = XGpio_Initialize(gpio, gpioDeviceId);
@@ -41,7 +41,7 @@ XStatus setupGpioWithInterrupt(XScuGic *interruptController, XGpio *gpio, u16 gp
         return XST_FAILURE;
     }
 
-    XGpio_SetDataDirection(gpio, 1, 0xFFFFFFFF);
+    XGpio_SetDataDirection(gpio, gpioChannel, 0xFFFFFFFF);
 
     #ifdef DEBUG
         xil_printf("GPIO initialized\n\r");
@@ -56,7 +56,7 @@ XStatus setupGpioWithInterrupt(XScuGic *interruptController, XGpio *gpio, u16 gp
         xil_printf("Interrupt connected\n\r");
     #endif
 
-    XGpio_InterruptEnable(gpio, 1);
+    XGpio_InterruptEnable(gpio, gpioChannel);
     XGpio_InterruptGlobalEnable(gpio);
 
     #ifdef DEBUG

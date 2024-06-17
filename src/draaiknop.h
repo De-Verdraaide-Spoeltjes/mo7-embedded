@@ -3,6 +3,6 @@
 
 #include "XStatus.h"
 
-XStatus InitDraaiknop();
+void encoderInterrupt(void* gpio);
 
 #endif

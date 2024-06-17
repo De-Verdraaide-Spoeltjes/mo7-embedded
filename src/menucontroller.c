@@ -9,8 +9,6 @@ void ButtonRight();
 void ButtonLeft();
 void UpdateDisplay();
 
-draaiknopData *DraaiknopData;
-
 filterData *FilterData;
 
 const char filterNames[FILTER_COUNT][MAX_TEXT_LENGTH] = {
@@ -26,8 +24,7 @@ uint8_t menuItemSelected = 1;
 
 displayData *DisplayData;
 
-XStatus InitMenuController(draaiknopData *draaiknop, filterData *filters, displayData *display) {
-    DraaiknopData = draaiknop;
+XStatus InitMenuController(filterData *filters, displayData *display) {
     FilterData = filters;
     DisplayData = display;
 
@@ -41,22 +38,18 @@ XStatus InitMenuController(draaiknopData *draaiknop, filterData *filters, displa
     return XST_SUCCESS;
 }
 
-void RunMenuController() {
+void RunMenuController(draaiknopData *draaiknop) {
     // Read the state of the rotary encoder
-    // Reset the rotary encoder state if an action is performed
-    if (DraaiknopData->pushed) {
+    if (draaiknop->pushed) {
         ButtonPressed();
-        DraaiknopData->pushed = false;
         UpdateDisplay();
     } 
-    else if (DraaiknopData->right) {
+    else if (draaiknop->right) {
         ButtonRight();
-        DraaiknopData->right = false;
         UpdateDisplay();
     } 
-    else if (DraaiknopData->left) {
+    else if (draaiknop->left) {
         ButtonLeft();
-        DraaiknopData->left = false;
         UpdateDisplay();
     }
 }
@@ -78,14 +71,18 @@ void ButtonRight() {
             menuItemSelected++;
         }
     } else if (menuState > 0 && menuState < FILTER_COUNT + 1) {
-        // If a filter filters is active, increase the selected filter's value
-        if (FilterData->filterAmplitudes[menuState - 1] < 100) {
-            FilterData->filterAmplitudes[menuState - 1]++;
+        // If a filter is active, increase the selected filter's value
+        if (FilterData->filterAmplitudes[menuState - 1] <= 95) {
+            FilterData->filterAmplitudes[menuState - 1] += 5;
+        } else {
+        	FilterData->filterAmplitudes[menuState - 1] = 100;
         }
     } else {
         // If the volume filters is active, increase the volume
-        if (FilterData->volume < 100) {
-            FilterData->volume++;
+        if (FilterData->volume <= 95) {
+            FilterData->volume += 5;
+        } else {
+        	FilterData->volume = 100;
         }
     }
 }
@@ -98,13 +95,17 @@ void ButtonLeft() {
         }
     } else if (menuState > 0 && menuState < FILTER_COUNT + 1) {
         // If a filter filters is active, increase the selected filter's value
-        if (FilterData->filterAmplitudes[menuState - 1] > -100) {
-            FilterData->filterAmplitudes[menuState - 1]--;
+        if (FilterData->filterAmplitudes[menuState - 1] >= -95) {
+            FilterData->filterAmplitudes[menuState - 1] -= 5;
+        } else {
+        	FilterData->filterAmplitudes[menuState - 1] = -100;
         }
     } else {
         // If the volume filters is active, increase the volume
-        if (FilterData->volume > 0) {
-            FilterData->volume--;
+        if (FilterData->volume >= 0) {
+            FilterData->volume -= 5;
+        } else {
+        	FilterData->volume = 0;
         }
     }
 }

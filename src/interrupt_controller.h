@@ -6,7 +6,7 @@
 #include "xgpio.h"
 
 XStatus initInterruptController(XScuGic *interruptController);
-XStatus setupGpioWithInterrupt(XScuGic *interruptController, XGpio *gpio, u16 gpioDeviceId, u32 interruptId, Xil_ExceptionHandler handler);
+XStatus setupGpioWithInterrupt(XScuGic *interruptController, XGpio *gpio, u16 gpioDeviceId, unsigned gpioChannel, u32 interruptId, Xil_ExceptionHandler handler);
 XStatus setupTimerInterrupt(XScuGic *interruptController, uint32_t time, Xil_ExceptionHandler handler);
 
 #endif

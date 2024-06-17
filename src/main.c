@@ -20,19 +20,26 @@
 
 void statusLED();
 
+#define ENCODER_DEVICE_ID	   	XPAR_ARDUINO_GPIO_DEVICE_ID
+#define ENCODER_CHANNEL			2
+#define ENCODER_INTERRUPT_ID	XPAR_FABRIC_ARDUINO_GPIO_IP2INTC_IRPT_INTR
+
 #define BTN_DEVICE_ID           XPAR_BTNS_SWITCHES_INPUTS_DEVICE_ID
 #define BTN_CHANNEL             1
+
 #define STATUS_LED_DEVICE_ID    XPAR_LEDS_OUTPUTS_DEVICE_ID
 #define STATUS_LED_CHANNEL      2
+
+XGpio encoderGpio;
 XGpio buttonGpio;
 XGpio leds;
 XScuGic interruptController;
 
-draaiknopData draaiknop;
 filterData filters;
 displayData display;
 
 void hold(u32 time);
+void risingEdge(draaiknopData *input, draaiknopData *output);
 
 XStatus initButton() {
 	XStatus status;
@@ -60,7 +67,7 @@ void Initialize() {
 	}
 	init_state |= status;
 
-	status = InitMenuController(&draaiknop, &filters, &display);
+	status = InitMenuController(&filters, &display);
 	if (status != XST_SUCCESS) {
 		print("Error initializing menu controller\n\r");
 	}
@@ -89,6 +96,12 @@ void Initialize() {
 	if (status != XST_SUCCESS) {
 		print("Error initializing audio filters\n\r");
 	}
+
+	// status = setupGpioWithInterrupt(&interruptController, &encoderGpio, ENCODER_DEVICE_ID, ENCODER_CHANNEL, ENCODER_INTERRUPT_ID, encoderInterrupt);
+	// if (status != XST_SUCCESS) {
+	// 	print("Error setting up rotary encoder interrupt\n\r");
+	// }
+	// init_state |= status;
 
 	status = setupTimerInterrupt(&interruptController, INTERRUPT_PERIOD_US, audioInterruptHandler);
 	if (status != XST_SUCCESS) {
@@ -123,7 +136,6 @@ int main()
 
     while (1) {
        statusLED();
-       RunMenuController();
 
         XTime timeNow;
 		XTime_GetTime(&timeNow);
@@ -132,9 +144,15 @@ int main()
             RunDisplay();
 
             u8 buttonData = XGpio_DiscreteRead(&buttonGpio, BTN_CHANNEL);
+			draaiknopData draaiknop;
 			draaiknop.left = buttonData & 0x01;
 			draaiknop.right = buttonData & 0x02;
 			draaiknop.pushed = buttonData & 0x04;
+
+			draaiknopData draaiknopRisingEdge;
+			risingEdge(&draaiknop, &draaiknopRisingEdge);
+
+			RunMenuController(&draaiknopRisingEdge);
         }
     }
 
@@ -153,4 +171,14 @@ void statusLED() {
         state = !state;
         tOld = tNow;
     }
+}
+
+void risingEdge(draaiknopData *input, draaiknopData *output) {
+	static draaiknopData storage;
+
+	output->left = input->left && !storage.left;
+	output->right = input->right && !storage.right;
+	output->pushed = input->pushed && !storage.pushed;
+
+	storage = *input;
 }
